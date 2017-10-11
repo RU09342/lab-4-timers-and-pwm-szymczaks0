@@ -103,4 +103,4 @@ A switch statement was used to control the flow of our timer/port interrupt stat
 
 To test if this debouncing code is satisfactory for some real-world purpose, some code could be written that constantly outputs the result of the debounce state machine to a pin. This pin could then be connected to an oscilloscope and observed when pressing the button. Compare the signal of the output with the input and observe how well it is debounced.
 
-To generalize the use of this code, put the desired output code in state 2.
+To make the use of this code, put the desired output code in state 2 in place of the line ``` P1OUT ^= BIT0;              //BLINK BIT0 (OUTPUT) ```.
