@@ -108,3 +108,98 @@ A switch statement was used to control the flow of our timer/port interrupt stat
 To test if this debouncing code is satisfactory for some real-world purpose, some code could be written that constantly outputs the result of the debounce state machine to a pin. This pin could then be connected to an oscilloscope and observed when pressing the button. Compare the signal of the output with the input and observe how well it is debounced.
 
 To make the use of this code, put the desired output code in state 2 in place of the line ``` P1OUT ^= BIT0;              //BLINK BIT0 (OUTPUT) ```.
+
+## Extra Work
+For some extra functionality, a second button debounce was implemented. A parallel copy of the debouncing state machine was used in the same timer and port interrupts. Because of this implementation, only one button can be pressed and registered at a time:
+This code is for the FR6989.
+```c
+#pragma vector=PORT1_VECTOR
+__interrupt void PORT_1(void)
+{
+    switch(P1IV)
+    {
+    case P1IV_P1IFG1: //button 1 was pressed
+        switch(state)
+        {
+        case 0: //OFF -> GOING ON
+            TA0CTL = TASSEL_2 + MC_1 + TACLR;       // ACTIVATE TIMER (goes into case 0 in the timer ISR)
+            P1IFG &= ~BIT1;                         // CLEAR FLAG FOR P1.2
+            P1IE &= ~BIT1;                          // disable interrupts for P1.2 (button 2)
+            state = 1;
+            break;
+        case 3: //ON -> GOING OFF
+            TA0CTL = TASSEL_2 + MC_1 + TACLR;       //ACTIVATE TIMER (goes into case 1 in the timer ISR)
+            P1IFG &= ~BIT1;                         // CLEAR FLAG FOR P1.2
+            P1IE &= ~BIT1;                          // disable interrupts for P1.2 (button 2)
+            state = 5;
+            break;
+        }
+        break;
+    case P1IV_P1IFG2: //button 2 was pressed
+        switch(state)
+        {
+        case 0: //OFF -> GOING ON
+            TA0CTL = TASSEL_2 + MC_1 + TACLR;       // ACTIVATE TIMER (goes into case 0 in the timer ISR)
+            P1IFG &= ~BIT2;                         // CLEAR FLAG FOR P1.2
+            P1IE &= ~BIT2;                          // disable interrupts for P1.2 (button 2)
+            state = 2;
+            break;
+        case 4: //ON -> GOING OFF
+            TA0CTL = TASSEL_2 + MC_1 + TACLR;       //ACTIVATE TIMER (goes into case 1 in the timer ISR)
+            P1IFG &= ~BIT2;                         // CLEAR FLAG FOR P1.2
+            P1IE &= ~BIT2;                          // disable interrupts for P1.2 (button 2)
+            state = 6;
+            break;
+        }
+        break;
+    }
+}
+
+#pragma vector=TIMER0_A0_VECTOR
+__interrupt void Timer_A0 (void)
+{
+
+            switch(state)
+            {
+            case 1://GOING ON -> ON
+                P1OUT ^= BIT0;              //BLINK LED (OUTPUT)
+                P1IE |= BIT1;               //RE-ENABLE INTERRUPTS
+                P1IES &= ~BIT1;              //TOGGLE INTERRUPT EDGE: LOW TO HIGH (button release)
+                TA0CTL &= ~TASSEL_2;        //STOP TIMER
+                TA0CTL |= TACLR;            //CLEAR TIMER
+                state = 3;                  //TO GO TO NEXT STATE IN PORT 1 ISR
+                break;
+            case 5://GOING OFF -> OFF
+                P1IE |= BIT1;               //SET P1.5 INTERRUPT ENABLED (S2)
+                P1IFG &= ~BIT1;             //P1.2 IFG CLEARED
+                P1IES |= BIT1;              //TOGGLE INTERRUPT EDGE: HIGH TO LOW
+                TA0CTL &= ~TASSEL_2;        //STOP TIMER
+                TA0CTL |= TACLR;            //CLEAR TIMER
+                state = 0;                  //UPON ANOTHER BUTTON PRESS, WE WILL ENTER CASE 0 OF PORT 1 ISR
+                break;
+              case 2://GOING ON -> ON
+                  P9OUT ^= BIT7;              //BLINK LED (OUTPUT)
+                  P1IE |= BIT2;               //RE-ENABLE INTERRUPTS
+                  P1IES &= ~BIT2;              //TOGGLE INTERRUPT EDGE: LOW TO HIGH (button release)
+                  TA0CTL &= ~TASSEL_2;        //STOP TIMER
+                  TA0CTL |= TACLR;            //CLEAR TIMER
+                  state = 4;                  //TO GO TO NEXT STATE IN PORT 1 ISR
+                  break;
+              case 6://GOING OFF -> OFF
+                  P1IE |= BIT2;               //SET P1.5 INTERRUPT ENABLED (S2)
+                  P1IFG &= ~BIT2;             //P1.2 IFG CLEARED
+                  P1IES |= BIT2;              //TOGGLE INTERRUPT EDGE: HIGH TO LOW
+                  TA0CTL &= ~TASSEL_2;        //STOP TIMER
+                  TA0CTL |= TACLR;            //CLEAR TIMER
+                  state = 0;                  //UPON ANOTHER BUTTON PRESS, WE WILL ENTER CASE 0 OF PORT 1 ISR
+                  break;
+              }
+}
+```
+  Case 0 in the port interrupt depends on which button is pressed, from there, depending on which button was pressed, either case 1 or case 2 are entered. From there, the state machine branches as follows:
+  
+  Button 1 pressed: case 0 -> case 1 -> case 3 -> case 5 -> case 0.
+  
+  Button 2 pressed: case 0 -> case 2 -> case 4 -> case 6 -> case 0.
+
+This many cases could be avoided with more eloquent code. However, this is a basic, brute force way of ensuring that the state machine branches do not effect each other. On a side note, this code works as a fairly decent "who can press the buzzer first" style mechanism like is used in the game show: *Family Feud*.
