@@ -47,10 +47,9 @@ __interrupt void PORT_5(void)
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void Timer1_A0 (void)
 {
-    if(pwm < 1000) pwm += 100;
+    if(pwm < 1000) pwm += 100; // increase pwm by 100 when button is pressed
     else pwm = 0;
     P5IE |= BIT5;           //ENABLE INTERRUPT
     TA0CCR1 = pwm;    //PWM starts at 50% and increase by PWM (100) then reset to zero
     TA1CTL = 0x00;          //STOP TIMER
 }
-

@@ -13,7 +13,7 @@ int main(void)
                                                   // to activate previously configured port settings
 //TIMER SETUP
     TA0CCTL0 = CCIE;        // CCR0 interrupt ENABLE
-    TA0CCR0 = 25000;        //overflow every 10ms
+    TA0CCR0 = 5000;        //overflow every 5ms
 
 //BUTTON SETUP
     //BUTTON
@@ -40,7 +40,7 @@ __interrupt void PORT_5(void)
         {
         case 0: //OFF -> GOING ON
             TA0CTL = TASSEL_2 + MC_1 + TACLR + ID_2;       // ACTIVATE TIMER (goes into case 0 in the timer ISR)
-            P5IFG &= BIT5;                         // CLEAR FLAG FOR P5.5
+            P5IFG &= ~BIT5;                         // CLEAR FLAG FOR P5.5
             P5IE &= ~BIT5;                          // disable interrupts for P5.5 (BUTTON)
             break;
         case 1: //ON -> GOING OFF

@@ -35,7 +35,7 @@ int main(void)
     __bis_SR_register(GIE);     // Enter LPM3, enable interrupts
     for(;;) //pwm loop
     {
-        if(TA0R <= pwm) P1OUT ^= BIT0; // pwm/1000 * 100% = duty cycle
+        if(TA0R <= pwm) P1OUT |= BIT0; // pwm/1000 * 100% = duty cycle
         else if (TA0R > pwm) P1OUT &= ~BIT0;
     }
 }

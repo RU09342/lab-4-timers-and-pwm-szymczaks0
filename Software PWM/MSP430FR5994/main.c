@@ -55,7 +55,7 @@ __interrupt void TIMER0_A1_ISR(void)
 __interrupt void TIMER0_A0_ISR(void)
 
 {
-    if(pwm == 0);
+    if(pwm == 0) P1OUT &= ~BIT1;
     else P1OUT |= BIT1; //CCR0 PWM
 }
 
@@ -73,10 +73,10 @@ __interrupt void PORT_5(void)
 #pragma vector=TIMER1_A0_VECTOR
 __interrupt void Timer1_A0 (void)
 {
-    if(TA1CCR0)         //IF THERE HASN'T BEEN AN INTERRUPT BY THE BUTTON IN 10MS
-    {                   //COMMIT TO BUTTON PRESS
     if(pwm < 1000) pwm += 100;
-    else pwm = 0;
+    else {
+        P1OUT &= ~BIT1;
+        pwm = 0;
     P5IE |= BIT5;           //ENABLE INTERRUPT
     TA0CCR1 = pwm;          //PWM starts at 50% and increase by PWM (100) then reset to zero
     TA1CTL = 0x00;          //STOP TIMER
