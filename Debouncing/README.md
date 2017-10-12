@@ -12,13 +12,17 @@
   During the time between the moment the button is pressed and the moment the button is released, we want one continuous output from the button. If this is achieved, we can safely say that the button has been debounced. This means there are two states of a button press that must be handled: the button press and the button release.  There must then be some code that handles both the button press and the button release. 
   
   ### There are four states total during a button press:
-State 1.  Assuming an active high button\*: The button was low, it was pressed, and now is going high. The instant the button is pressed, we want to disable input from the button for a short period of time to ignore the bouncing signal that the button produces. This is done by enabling a timer where our desired delay is CCR0 of that timer.
+#### State 1.  
+Assuming an active high button\*: The button was low, it was pressed, and now is going high. The instant the button is pressed, we want to disable input from the button for a short period of time to ignore the bouncing signal that the button produces. This is done by enabling a timer where our desired delay is CCR0 of that timer.
   
-State 2.  The button was going high, and is now completely high. This is the point that bouncing has stopped. At this point, we need to start considering what is going to happen on the release of the button. We will need to catch the falling edge of the button and also stop the timer. This state is held until the button is released. This is the state where we want to output to the rest of our code our successful button press. Notice in the code below, state 2 is where the LED is toggled.
+#### State 2.
+The button was going high, and is now completely high. This is the point that bouncing has stopped. At this point, we need to start considering what is going to happen on the release of the button. We will need to catch the falling edge of the button and also stop the timer. This state is held until the button is released. This is the state where we want to output to the rest of our code our successful button press. Notice in the code below, state 2 is where the LED is toggled.
   
-State 3.  The button has been released, so we are now transitioning from high to low. The instant the button is released, we want to disable input from the button for a short period of time to ignore the bouncing signal that the button produces. This is done by enabling a timer where our desired delay is, again, CCR0.
+#### State 3.  
+The button has been released, so we are now transitioning from high to low. The instant the button is released, we want to disable input from the button for a short period of time to ignore the bouncing signal that the button produces. This is done by enabling a timer where our desired delay is, again, CCR0.
   
-State 4.  The button was going low, and is now completely low. We now want to set our debouncing code back to it's initial state so that it is ready for another button press. To do this we must turn off the timer, and re-enable our initial button settings such as the interrupt edge.
+#### State 4.  
+The button was going low, and is now completely low. We now want to set our debouncing code back to it's initial state so that it is ready for another button press. To do this we must turn off the timer, and re-enable our initial button settings such as the interrupt edge.
 \*The actual buttons on the MSP430s are active low when a pull-up is used. The logic for interrupt edge detection must be changed accordingly.
   
  ## Implementation:
